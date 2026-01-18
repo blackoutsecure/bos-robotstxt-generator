@@ -32,13 +32,7 @@ jobs:
           site_url: https://example.com
           public_dir: dist
           robots_disallow: /admin/,/private/
-
-      - name: Upload robots.txt artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: robots-file
-          path: dist/robots.txt
-          retention-days: 5
+          
 ```
 
 ## Features
