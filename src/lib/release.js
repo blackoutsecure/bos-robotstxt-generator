@@ -110,12 +110,19 @@ function release(versionType = null) {
 
   // Create moving major version tag
   const major = version.split('.')[0];
-  console.log(`7️⃣  Creating moving tag v${major}...`);
+  console.log(`7️⃣  Creating moving tags v${major} and latest...`);
   exec(`git tag -f v${major} v${version}`);
   exec(`git push -f origin v${major}`);
+  exec(`git tag -f latest v${version}`);
+  exec(`git push -f origin latest`);
   console.log();
 
   console.log(`✅ Successfully released v${version}`);
+  console.log();
+  console.log('📝 Users can now reference this action with:');
+  console.log(`   - @v${version} (specific version)`);
+  console.log(`   - @v${major} (latest v${major}.x.x)`);
+  console.log('   - @latest (always latest release)');
   console.log();
   console.log('📝 Next steps:');
   console.log('1. Go to: https://github.com/blackoutsecure/bos-robotstxt-generator/releases');
