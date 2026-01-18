@@ -20,7 +20,7 @@
 const PROJECT_CONFIG = {
   // Project identity
   name: 'Blackout Secure Robots TXT Generator',
-  version: '1.0.2',
+  version: '1.1.0',
   brandingEmoji: '�',
 
   // Repository information
