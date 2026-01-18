@@ -36,27 +36,45 @@ function checkGitClean() {
  * Release workflow
  */
 function release(versionType = null) {
+  console.log(`📦 Starting release process...`);
+  console.log();
+
+  // Check git status FIRST before making any changes
+  if (!checkGitClean()) {
+    console.error('❌ Git working directory is not clean. Commit changes first.');
+    process.exit(1);
+  }
+
   let version;
 
-  // If versionType is a semver (e.g., "1.2.3"), use it directly
+  // Determine version to release
   if (versionType && /^\d+\.\d+\.\d+$/.test(versionType)) {
     version = versionType;
   } else if (versionType && ['patch', 'minor', 'major'].includes(versionType)) {
-    // Auto-increment based on type
-    const { incrementVersion } = require('./version');
-    version = incrementVersion(versionType);
+    // Calculate what the new version would be
+    const current = getCurrentVersion();
+    const parts = current.split('.').map(Number);
+    switch (versionType) {
+      case 'major':
+        parts[0]++;
+        parts[1] = 0;
+        parts[2] = 0;
+        break;
+      case 'minor':
+        parts[1]++;
+        parts[2] = 0;
+        break;
+      case 'patch':
+        parts[2]++;
+        break;
+    }
+    version = parts.join('.');
   } else {
     version = getCurrentVersion();
   }
 
   console.log(`📦 Releasing v${version}...`);
   console.log();
-
-  // Check git status
-  if (!checkGitClean()) {
-    console.error('❌ Git working directory is not clean. Commit changes first.');
-    process.exit(1);
-  }
 
   // Update version
   console.log(`1️⃣  Updating version to ${version}...`);
