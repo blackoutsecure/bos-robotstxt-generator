@@ -1,9 +1,14 @@
-/**
- * Central Test Configuration
- *
- * This file contains shared configuration values used across all tests.
- * Modify values here to update them project-wide.
- */
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Blackout Secure Robots TXT Generator GitHub Action
+// Copyright © 2025-2026 Blackout Secure
+// Licensed under Apache License 2.0
+// Website: https://blackoutsecure.app
+// Repository: https://github.com/blackoutsecure/bos-robotstxt-generator
+// Issues: https://github.com/blackoutsecure/bos-robotstxt-generator/issues
+// Docs: https://github.com/blackoutsecure/bos-robotstxt-generator#readme
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Central test configuration shared across suites
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const path = require('path');
 

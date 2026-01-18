@@ -30,6 +30,8 @@ public/
 .env
 .env.local
 .env.*.local
+.envrc
+.direnv/
 *.pem
 *.key
 
@@ -128,6 +130,7 @@ __pycache__/
 *.zip
 *.tar
 *.tar.gz
+*.tgz
 *.7z
 *.rar
 *.iso

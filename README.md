@@ -336,77 +336,24 @@ npm run build  # Compile src/index.js to dist/index.js
 
 ## Releasing a New Version
 
-### Automated Release (Recommended)
+Use the built-in scripts; they bump versions, run checks, build `dist`, tag, and push.
 
-The project includes automated release workflows that handle versioning, building, testing, and git tagging:
+- Patch: `npm run release patch`
+- Minor: `npm run release minor`
+- Major: `npm run release major`
+- Specific: `npm run release 1.2.3`
 
-**Patch Release (bug fixes):**
+Quick version utilities (no release):
 
-```bash
-npm run release patch
-```
+- Show: `npm run ver`
+- Set: `npm run ver:set 1.2.3`
+- Bump: `npm run ver:patch | ver:minor | ver:major`
 
-**Minor Release (new features):**
+Publish to Marketplace after tags push:
 
-```bash
-npm run release minor
-```
-
-**Major Release (breaking changes):**
-
-```bash
-npm run release major
-```
-
-**Specific Version:**
-
-```bash
-npm run release 1.2.3
-```
-
-Each release command automatically:
-
-1. ✅ Increments version (or sets specific version)
-2. ✅ Updates `package.json` and `src/lib/project-config.js`
-3. ✅ Runs quality checks (lint + format)
-4. ✅ Builds `dist/index.js`
-5. ✅ Runs full test suite
-6. ✅ Commits changes with message `chore: release vX.Y.Z`
-7. ✅ Creates annotated git tag `vX.Y.Z`
-8. ✅ Creates/updates moving major version tag (e.g., `v1`)
-9. ✅ Pushes to `main` branch and all tags to GitHub
-
-### Version Management
-
-**Check current version:**
-
-```bash
-npm run ver
-```
-
-**Set specific version (without releasing):**
-
-```bash
-npm run ver:set 1.2.3
-```
-
-**Increment version (without releasing):**
-
-```bash
-npm run ver:patch  # 1.0.2 → 1.0.3
-npm run ver:minor  # 1.0.2 → 1.1.0
-npm run ver:major  # 1.0.2 → 2.0.0
-```
-
-### Final Step: Publish to Marketplace
-
-After pushing tags, complete the release on GitHub:
-
-1. Go to: https://github.com/blackoutsecure/bos-robotstxt-generator/releases
-2. Draft new release → select your tag (e.g., `v1.2.3`)
-3. Check: "Publish this Action to the GitHub Marketplace"
-4. Select category: Deployment or Continuous Integration
-5. Publish release
+1. Open the Releases page and draft for your tag (e.g., `v1.2.3`).
+2. Check "Publish this Action to the GitHub Marketplace" and pick the category.
+3. Publish the release.
 
 ## Why `dist/` is Committed
 

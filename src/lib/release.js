@@ -1,8 +1,15 @@
 #!/usr/bin/env node
-/**
- * Release Script
- * Handles the complete release workflow including version update, build, commit, and tagging
- */
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Blackout Secure Robots TXT Generator GitHub Action
+// Copyright © 2025-2026 Blackout Secure
+// Licensed under Apache License 2.0
+// Website: https://blackoutsecure.app
+// Repository: https://github.com/blackoutsecure/bos-robotstxt-generator
+// Issues: https://github.com/blackoutsecure/bos-robotstxt-generator/issues
+// Docs: https://github.com/blackoutsecure/bos-robotstxt-generator#readme
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Release workflow script (version bump, build, test, tag, push)
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const { execSync } = require('child_process');
 const { setVersion, getCurrentVersion } = require('./version');

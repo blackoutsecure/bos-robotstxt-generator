@@ -1,8 +1,14 @@
-/**
- * ESLint Configuration
- * Copyright © 2025 Blackout Secure
- * SPDX-License-Identifier: Apache-2.0
- */
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// Blackout Secure Robots TXT Generator GitHub Action
+// Copyright © 2025-2026 Blackout Secure
+// Licensed under Apache License 2.0
+// Website: https://blackoutsecure.app
+// Repository: https://github.com/blackoutsecure/bos-robotstxt-generator
+// Issues: https://github.com/blackoutsecure/bos-robotstxt-generator/issues
+// Docs: https://github.com/blackoutsecure/bos-robotstxt-generator#readme
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+// ESLint configuration
+// ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 const js = require('@eslint/js');
 
