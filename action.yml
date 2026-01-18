@@ -1,0 +1,79 @@
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# Robots TXT Generator GitHub Action
+# Copyright © 2025 Blackout Secure
+# Licensed under Apache License 2.0
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+name: 'Robots TXT Generator'
+description: 'Generate a clean, standards‑compliant robots.txt file for your site. This tool automates crawler rules, indexing preferences, and sitemap references, making it easy to manage search engine behavior and strengthen your site\'s technical SEO.'
+author: 'Blackout Secure'
+runs:
+  using: 'node20'
+  main: 'dist/index.js'
+inputs:
+  site_url:
+    description: 'Base site URL (optional). Used to normalize relative sitemap_urls entries.'
+    required: false
+  public_dir:
+    description: 'Directory to write robots.txt. Defaults to dist.'
+    required: false
+    default: 'dist'
+  robots_output_dir:
+    description: 'Override output directory for robots.txt (defaults to public_dir).'
+    required: false
+  robots_filename:
+    description: 'Filename for robots.txt (default robots.txt).'
+    required: false
+    default: 'robots.txt'
+  allow_autodetect:
+    description: 'Auto-detect site_url/public_dir when not provided (CNAME or GitHub Pages).'
+    required: false
+    default: 'true'
+  robots_user_agent:
+    description: 'robots.txt User-agent directive (default *).'
+    required: false
+    default: '*'
+  robots_disallow:
+    description: 'Comma-separated URL-path prefixes for Disallow directives (e.g., /admin/,/private/).'
+    required: false
+    default: ''
+  robots_allow:
+    description: 'Comma-separated URL-path prefixes for Allow directives.'
+    required: false
+    default: ''
+  robots_crawl_delay:
+    description: 'Crawl-delay directive in seconds.'
+    required: false
+    default: ''
+  robots_comments:
+    description: 'Include generator comments in robots.txt.'
+    required: false
+    default: 'true'
+  strict_validation:
+    description: 'Fail the run when robots.txt validation errors are found.'
+    required: false
+    default: 'true'
+  sitemap_urls:
+    description: 'Comma-separated sitemap URLs to reference in robots.txt.'
+    required: false
+  debug_show_robots:
+    description: 'Debug: display generated robots.txt content.'
+    required: false
+    default: 'false'
+  upload_artifacts:
+    description: 'Upload robots.txt as a GitHub Actions artifact.'
+    required: false
+    default: 'true'
+  artifact_name:
+    description: 'Name of the artifact when upload_artifacts is enabled.'
+    required: false
+    default: 'robots-file'
+  artifact_retention_days:
+    description: 'Number of days to retain the artifact (1-90). Leave empty for default.'
+    required: false
+outputs:
+  robots_path:
+    description: 'Path to the generated robots.txt'
+branding:
+  color: 'blue'
+  icon: 'shield'
