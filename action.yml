@@ -3,9 +3,12 @@
 # Copyright © 2025 Blackout Secure
 # Licensed under Apache License 2.0
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+# GitHub Marketplace Categories: Utilities, Publishing
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-name: 'Robots TXT Generator'
-description: 'Generate a clean, standards‑compliant robots.txt file for your site. This tool automates crawler rules, indexing preferences, and sitemap references, making it easy to manage search engine behavior and strengthen your site''s technical SEO.'
+name: 'Blackout Secure Robots TXT Generator'
+description: 'Generate a standards-compliant robots.txt with automated crawler rules, sitemaps, and SEO.'
 author: 'Blackout Secure'
 runs:
   using: 'node20'
@@ -76,4 +79,4 @@ outputs:
     description: 'Path to the generated robots.txt'
 branding:
   color: 'blue'
-  icon: 'shield'
+  icon: 'file-text'
