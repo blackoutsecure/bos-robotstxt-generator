@@ -1,0 +1,6 @@
+{
+  "require": "test/test-helpers.js",
+  "spec": "test/unit/**/*.test.js",
+  "timeout": 5000,
+  "reporter": "spec"
+}

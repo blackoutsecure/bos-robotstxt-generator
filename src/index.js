@@ -1,6 +1,6 @@
 /**
  * Robots Generator - GitHub Action
- * Copyright 2025 Blackout Secure
+ * Copyright 2025-2026 Blackout Secure
  * SPDX-License-Identifier: Apache-2.0
  *
  * Generates robots.txt files for web applications with validation
@@ -24,14 +24,10 @@ try {
   // Artifact client not available in local dev
 }
 
-const {
-  normalizeUrl,
-  formatFileSize,
-  findPublicDir,
-  inferSiteUrl,
-} = require('./lib/utils');
+const { normalizeUrl, formatFileSize, findPublicDir, inferSiteUrl } = require('./lib/utils');
 const { getRobotsTxtHeader } = require('./lib/project-config');
 const { validateRobotsTxt } = require('./lib/validation');
+const { printHeader, printFooter } = require('./lib/output-formatter');
 
 function getRobotsMaxSizeKb() {
   return parseInt(process.env.TEST_ROBOTS_MAX_SIZE_KB || '500', 10);
@@ -58,18 +54,11 @@ function ensureLeadingSlash(input) {
 
 async function run() {
   try {
-    core.info('🤖 Robots.txt Generator v0.2.0');
-    core.info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    printHeader(core);
 
     const ROBOTS_MAX_SIZE_KB = getRobotsMaxSizeKb();
-    const allowAutodetect = toBool(
-      core.getInput('allow_autodetect') || 'true',
-      true,
-    );
-    const strictValidation = toBool(
-      core.getInput('strict_validation') || 'true',
-      true,
-    );
+    const allowAutodetect = toBool(core.getInput('allow_autodetect') || 'true', true);
+    const strictValidation = toBool(core.getInput('strict_validation') || 'true', true);
 
     // Get robots.txt configuration
     let siteUrl = (core.getInput('site_url') || '').trim();
@@ -80,14 +69,13 @@ async function run() {
     const robotsDisallow = splitList(core.getInput('robots_disallow'));
     const robotsAllow = splitList(core.getInput('robots_allow'));
     const robotsCrawlDelay = (core.getInput('robots_crawl_delay') || '').trim();
-    const robotsComments = (core.getInput('robots_comments') || '').trim();
+    const robotsComments = toBool(core.getInput('robots_comments') || 'true', true);
     const sitemapUrls = splitList(core.getInput('sitemap_urls'));
     const debugShowRobots = toBool(core.getInput('debug_show_robots'), false);
     const uploadArtifacts = toBool(core.getInput('upload_artifacts'), false);
     const artifactName = core.getInput('artifact_name') || 'robots-file';
     const artifactRetentionDays =
-      parseInt(core.getInput('artifact_retention_days') || '0', 10) ||
-      undefined;
+      parseInt(core.getInput('artifact_retention_days') || '0', 10) || undefined;
 
     // Auto-detect public_dir and site_url
     if (allowAutodetect) {
@@ -157,23 +145,15 @@ async function run() {
       core.info(`   Custom Comments:     Yes`);
     }
 
-    core.info(
-      `   Strict Validation:   ${strictValidation ? 'Enabled' : 'Disabled'}`,
-    );
-    core.info(
-      `   Upload Artifacts:    ${uploadArtifacts ? 'Enabled' : 'Disabled'}`,
-    );
+    core.info(`   Strict Validation:   ${strictValidation ? 'Enabled' : 'Disabled'}`);
+    core.info(`   Upload Artifacts:    ${uploadArtifacts ? 'Enabled' : 'Disabled'}`);
 
     core.info('\n📝 Generating robots.txt...\n');
 
     // Build robots.txt content
-    let robotsContent = getRobotsTxtHeader();
+    let robotsContent = robotsComments ? getRobotsTxtHeader() : '';
 
-    if (robotsComments) {
-      robotsContent += '\n\n' + robotsComments;
-    }
-
-    robotsContent += `\n\nUser-agent: ${robotsUserAgent}\n`;
+    robotsContent += `\nUser-agent: ${robotsUserAgent}\n`;
 
     // Build Allow/Disallow sections
     if (robotsDisallow.length === 0 && robotsAllow.length === 0) {
@@ -259,22 +239,16 @@ async function run() {
         const files = [robotsPath];
         const uploadOptions = { retentionDays: artifactRetentionDays };
         core.info('\n📦 Uploading artifacts...');
-        await artifactClient.uploadArtifact(
-          artifactName,
-          files,
-          robotsOutputDir,
-          uploadOptions,
-        );
+        await artifactClient.uploadArtifact(artifactName, files, robotsOutputDir, uploadOptions);
         core.info(`✅ Artifact uploaded: ${artifactName}`);
       } catch (err) {
         core.warning(
-          `⚠️  Failed to upload artifacts: ${err instanceof Error ? err.message : String(err)}`,
+          `⚠️  Failed to upload artifacts: ${err instanceof Error ? err.message : String(err)}`
         );
       }
     }
 
-    core.info('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    core.info('✅ Robots.txt generation completed!');
+    printFooter(core);
 
     // Set output
     core.setOutput('robots_path', robotsPath);

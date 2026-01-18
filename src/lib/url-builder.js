@@ -9,11 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const glob = require('glob');
 const { parse: parseHtml } = require('node-html-parser');
-const {
-  normalizeUrl,
-  normalizePathToUrl,
-  getGitLastCommitISO,
-} = require('./utils');
+const { normalizeUrl, normalizePathToUrl, getGitLastCommitISO } = require('./utils');
 const { readRobotsDisallows, isPathDisallowed } = require('./robots-parser');
 
 // Limits with optional test overrides (evaluated at call time to honor per-run env changes)
@@ -66,16 +62,13 @@ async function buildUrls(options, core) {
   core.info(`   Patterns: ${patterns.join(', ')}`);
   if (ignore.length) core.info(`   Excluding: ${ignore.join(', ')}`);
 
-  const files = glob.sync(
-    patterns.length > 1 ? `{${patterns.join(',')}}` : patterns[0],
-    {
-      cwd: publicDir,
-      ignore,
-      nodir: true,
-      dot: false,
-      follow: false,
-    },
-  );
+  const files = glob.sync(patterns.length > 1 ? `{${patterns.join(',')}}` : patterns[0], {
+    cwd: publicDir,
+    ignore,
+    nodir: true,
+    dot: false,
+    follow: false,
+  });
 
   core.info(`✅ Found ${files.length} file(s) to process`);
   if (debugListFiles && files.length) {
@@ -87,9 +80,7 @@ async function buildUrls(options, core) {
   const disallows = respectRobots ? readRobotsDisallows(robotsPath) : [];
 
   if (respectRobots && disallows.length) {
-    core.info(
-      `🤖 Respecting robots.txt - ${disallows.length} disallow rule(s)`,
-    );
+    core.info(`🤖 Respecting robots.txt - ${disallows.length} disallow rule(s)`);
   }
 
   const items = [];
@@ -104,16 +95,14 @@ async function buildUrls(options, core) {
     // Skip typical non-URL files unless directly navigable
     const skipExts = ['.map'];
     if (skipExts.includes(ext)) {
-      if (debugListFiles)
-        core.info(`[DEBUG] Skipping (excluded by extension): ${f}`);
+      if (debugListFiles) core.info(`[DEBUG] Skipping (excluded by extension): ${f}`);
       skippedCount++;
       continue;
     }
 
     const urlPath = '/' + f.replace(/\\/g, '/');
     if (isPathDisallowed(urlPath, disallows)) {
-      if (debugListFiles)
-        core.info(`[DEBUG] Skipping (robots.txt disallow): ${f}`);
+      if (debugListFiles) core.info(`[DEBUG] Skipping (robots.txt disallow): ${f}`);
       excludedItems.byRobots.push(f);
       skippedCount++;
       continue;
@@ -139,7 +128,7 @@ async function buildUrls(options, core) {
               : normalizePathToUrl(
                   baseUrl,
                   publicDir,
-                  path.join(publicDir, href.replace(/^\//, '')),
+                  path.join(publicDir, href.replace(/^\//, ''))
                 );
             fullUrl = candidate;
             item.url = candidate;
@@ -162,11 +151,7 @@ async function buildUrls(options, core) {
               // Normalize fs path under publicDir
               const targetFs = path.join(publicDir, hrefA.replace(/^\//, ''));
               if (fs.existsSync(targetFs) && fs.statSync(targetFs).isFile()) {
-                const targetUrl = normalizePathToUrl(
-                  baseUrl,
-                  publicDir,
-                  targetFs,
-                );
+                const targetUrl = normalizePathToUrl(baseUrl, publicDir, targetFs);
                 if (!discoveredSet.has(targetUrl)) {
                   discoveredSet.add(targetUrl);
                   linksDiscoveredCount++;
@@ -212,7 +197,7 @@ async function buildUrls(options, core) {
     core.info(`🔎 Discovered ${linksDiscoveredCount} additional link(s)`);
     if (discoveredSet.size >= MAX_DISCOVERED_LINKS) {
       core.warning(
-        `⚠️  Discovered links limit reached (${MAX_DISCOVERED_LINKS}). Some links may not be included.`,
+        `⚠️  Discovered links limit reached (${MAX_DISCOVERED_LINKS}). Some links may not be included.`
       );
     }
   }
@@ -230,9 +215,7 @@ async function buildUrls(options, core) {
     for (const u of discoveredSet) {
       // Safety limit: prevent memory issues with extremely large sites
       if (items.length >= MAX_TOTAL_URLS) {
-        core.warning(
-          `⚠️  Total URLs limit reached (${MAX_TOTAL_URLS}). Stopping URL collection.`,
-        );
+        core.warning(`⚠️  Total URLs limit reached (${MAX_TOTAL_URLS}). Stopping URL collection.`);
         break;
       }
       // Also limit the items added from discovered to MAX_DISCOVERED_LINKS
@@ -265,9 +248,7 @@ async function buildUrls(options, core) {
             if (item.url === excludeUrl) return false;
             // Support wildcard patterns
             if (excludeUrl.includes('*')) {
-              const regex = new RegExp(
-                '^' + excludeUrl.replace(/\*/g, '.*') + '$',
-              );
+              const regex = new RegExp('^' + excludeUrl.replace(/\*/g, '.*') + '$');
               if (regex.test(item.url)) return false;
             }
           }
@@ -284,24 +265,20 @@ async function buildUrls(options, core) {
   if (debugShowExclusions) {
     core.info('\n[DEBUG] Exclusion Summary:');
     if (excludedItems.byExtension.length > 0) {
-      core.info(
-        `[DEBUG] Excluded by extension (${excludedItems.byExtension.length}):`,
-      );
+      core.info(`[DEBUG] Excluded by extension (${excludedItems.byExtension.length}):`);
       for (const item of excludedItems.byExtension) {
         core.info(`[DEBUG]   - ${item}`);
       }
     }
     if (excludedItems.byRobots.length > 0) {
-      core.info(
-        `[DEBUG] Excluded by robots.txt (${excludedItems.byRobots.length}):`,
-      );
+      core.info(`[DEBUG] Excluded by robots.txt (${excludedItems.byRobots.length}):`);
       for (const item of excludedItems.byRobots) {
         core.info(`[DEBUG]   - ${item}`);
       }
     }
     if (excludedCount > 0) {
       const excludedUrls = uniqueItems.filter(
-        (item) => !filteredItems.some((fi) => fi.url === item.url),
+        (item) => !filteredItems.some((fi) => fi.url === item.url)
       );
       core.info(`[DEBUG] Excluded by URL patterns (${excludedCount}):`);
       for (const item of excludedUrls) {

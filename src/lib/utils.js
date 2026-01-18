@@ -53,9 +53,7 @@ function findPublicDir(candidateInput) {
   const candidates = [];
   if (candidateInput) candidates.push(candidateInput);
   candidates.push('dist', 'build', 'out', 'public', 'website', 'static');
-  const existing = candidates.filter(
-    (d) => fs.existsSync(d) && fs.statSync(d).isDirectory(),
-  );
+  const existing = candidates.filter((d) => fs.existsSync(d) && fs.statSync(d).isDirectory());
   if (!existing.length) return null;
   // Prefer ones containing index.html at root or many html files
   const scored = existing.map((d) => {
@@ -88,10 +86,7 @@ function inferSiteUrl(publicDir) {
   const repo = process.env.GITHUB_REPOSITORY || '';
   const [owner, repoName] = repo.split('/');
   if (owner) {
-    if (
-      repoName &&
-      repoName.toLowerCase() === `${owner.toLowerCase()}.github.io`
-    ) {
+    if (repoName && repoName.toLowerCase() === `${owner.toLowerCase()}.github.io`) {
       return `https://${owner}.github.io/`;
     }
     if (repoName) {

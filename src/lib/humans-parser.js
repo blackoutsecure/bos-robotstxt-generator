@@ -31,17 +31,10 @@ const { getHumansTxtHeader } = require('./project-config');
  * @returns {string} - Generated humans.txt content
  */
 function buildHumansTxt(options = {}) {
-  const {
-    team = {},
-    thanks = {},
-    site = {},
-    includeComments = false,
-  } = options;
+  const { team = {}, thanks = {}, site = {}, includeComments = false } = options;
 
   const hasSections =
-    Object.keys(team).length > 0 ||
-    Object.keys(thanks).length > 0 ||
-    Object.keys(site).length > 0;
+    Object.keys(team).length > 0 || Object.keys(thanks).length > 0 || Object.keys(site).length > 0;
 
   // If there is no content and comments are not requested, return empty output
   if (!hasSections && !includeComments) {

@@ -14,7 +14,7 @@
  */
 function validateRobotsTxt(
   robotsContent,
-  { strict = true, maxSizeKB = 500, requireSitemap = false },
+  { strict = true, maxSizeKB = 500, requireSitemap = false }
 ) {
   const results = [];
   try {
@@ -33,9 +33,7 @@ function validateRobotsTxt(
       });
     }
 
-    const hasUserAgent = lines.some((line) =>
-      /^User-agent:/i.test(line.trim()),
-    );
+    const hasUserAgent = lines.some((line) => /^User-agent:/i.test(line.trim()));
     if (!hasUserAgent) {
       results.push({
         type: strict ? 'error' : 'warning',
@@ -109,14 +107,11 @@ function validateRobotsTxt(
     if (foundDirectiveBeforeUserAgent) {
       results.push({
         type: 'warning',
-        message:
-          '⚠️  Directive found before User-agent (may not be applied correctly)',
+        message: '⚠️  Directive found before User-agent (may not be applied correctly)',
       });
     }
 
-    const crawlDelayLines = lines.filter((line) =>
-      /^Crawl-delay:/i.test(line.trim()),
-    );
+    const crawlDelayLines = lines.filter((line) => /^Crawl-delay:/i.test(line.trim()));
     for (const line of crawlDelayLines) {
       const match = line.match(/^Crawl-delay:\s*(.+)$/i);
       if (match) {
@@ -207,8 +202,7 @@ function validateHumansTxt(humansContent, { strict, maxSizeKB }) {
     if (hasNonAscii) {
       results.push({
         type: 'info',
-        message:
-          '      ℹ️  Contains non-ASCII characters (ensure UTF-8 encoding)',
+        message: '      ℹ️  Contains non-ASCII characters (ensure UTF-8 encoding)',
       });
     }
 
@@ -274,10 +268,7 @@ function validateSecurityTxt(securityContent, { strict, maxSizeKB }) {
         if (match) {
           const uri = match[1].trim();
           // Must be mailto:, tel:, or https:// URI
-          if (
-            !/^(mailto:|tel:|https:\/\/)/i.test(uri) &&
-            !/^https?:\/\//i.test(uri)
-          ) {
+          if (!/^(mailto:|tel:|https:\/\/)/i.test(uri) && !/^https?:\/\//i.test(uri)) {
             invalidContacts++;
           }
         }
@@ -300,8 +291,7 @@ function validateSecurityTxt(securityContent, { strict, maxSizeKB }) {
     } else if (expiresLines.length > 1) {
       results.push({
         type: 'warning',
-        message:
-          '      ⚠️  Multiple Expires fields found (must appear only once)',
+        message: '      ⚠️  Multiple Expires fields found (must appear only once)',
       });
     } else {
       // Validate Expires date format (ISO 8601)
@@ -312,8 +302,7 @@ function validateSecurityTxt(securityContent, { strict, maxSizeKB }) {
         if (isNaN(date.getTime())) {
           results.push({
             type: 'warning',
-            message:
-              '      ⚠️  Invalid Expires date format (should be ISO 8601)',
+            message: '      ⚠️  Invalid Expires date format (should be ISO 8601)',
           });
         } else {
           // Check if expired
@@ -330,8 +319,7 @@ function validateSecurityTxt(securityContent, { strict, maxSizeKB }) {
             if (date > oneYearFromNow) {
               results.push({
                 type: 'info',
-                message:
-                  '      ℹ️  Expires more than 1 year in the future (not recommended)',
+                message: '      ℹ️  Expires more than 1 year in the future (not recommended)',
               });
             } else {
               results.push({
@@ -345,21 +333,16 @@ function validateSecurityTxt(securityContent, { strict, maxSizeKB }) {
     }
 
     // Check for Preferred-Languages (should appear only once)
-    const langLines = lines.filter((line) =>
-      /^Preferred-Languages:/i.test(line.trim()),
-    );
+    const langLines = lines.filter((line) => /^Preferred-Languages:/i.test(line.trim()));
     if (langLines.length > 1) {
       results.push({
         type: 'warning',
-        message:
-          '      ⚠️  Multiple Preferred-Languages fields (must appear only once)',
+        message: '      ⚠️  Multiple Preferred-Languages fields (must appear only once)',
       });
     }
 
     // Check for optional but recommended fields
-    const hasEncryption = lines.some((line) =>
-      /^Encryption:/i.test(line.trim()),
-    );
+    const hasEncryption = lines.some((line) => /^Encryption:/i.test(line.trim()));
     const hasPolicy = lines.some((line) => /^Policy:/i.test(line.trim()));
     const hasCanonical = lines.some((line) => /^Canonical:/i.test(line.trim()));
 
@@ -376,17 +359,9 @@ function validateSecurityTxt(securityContent, { strict, maxSizeKB }) {
     }
 
     // Validate HTTPS URIs for web resources
-    const webUriFields = [
-      'Acknowledgments',
-      'Canonical',
-      'Encryption',
-      'Hiring',
-      'Policy',
-    ];
+    const webUriFields = ['Acknowledgments', 'Canonical', 'Encryption', 'Hiring', 'Policy'];
     for (const field of webUriFields) {
-      const fieldLines = lines.filter((line) =>
-        new RegExp(`^${field}:`, 'i').test(line.trim()),
-      );
+      const fieldLines = lines.filter((line) => new RegExp(`^${field}:`, 'i').test(line.trim()));
       for (const line of fieldLines) {
         const match = line.match(new RegExp(`^${field}:\\s*(.+)$`, 'i'));
         if (match) {
@@ -419,8 +394,7 @@ function validateSecurityTxt(securityContent, { strict, maxSizeKB }) {
     } else {
       results.push({
         type: 'info',
-        message:
-          '      ℹ️  File is not digitally signed (signing is recommended)',
+        message: '      ℹ️  File is not digitally signed (signing is recommended)',
       });
     }
 

@@ -122,9 +122,7 @@ async function writeSitemapTxt(urls, outPath) {
  * @returns {Promise<void>}
  */
 async function writeGzip(inputXml, outGzPath) {
-  const gz = await gzipPromise(
-    Buffer.isBuffer(inputXml) ? inputXml : Buffer.from(inputXml),
-  );
+  const gz = await gzipPromise(Buffer.isBuffer(inputXml) ? inputXml : Buffer.from(inputXml));
   fs.writeFileSync(outGzPath, gz);
 }
 

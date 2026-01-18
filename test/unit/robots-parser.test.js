@@ -1,9 +1,6 @@
 const assert = require('assert');
 const path = require('path');
-const {
-  readRobotsDisallows,
-  isPathDisallowed,
-} = require('../../src/lib/robots-parser');
+const { readRobotsDisallows, isPathDisallowed } = require('../../src/lib/robots-parser');
 
 describe('Robots Parser', () => {
   const fixturesDir = path.join(__dirname, '../fixtures/robots');

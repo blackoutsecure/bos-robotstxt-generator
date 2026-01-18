@@ -1,0 +1,12 @@
+# Build output
+dist/
+node_modules/
+coverage/
+
+# Package manager
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Cache
+.nyc_output/

@@ -122,9 +122,7 @@ function verifySitemapOutput(publicDir = 'dist') {
  */
 function runActionLocally(distPath = 'dist/index.js') {
   if (!fs.existsSync(distPath)) {
-    throw new Error(
-      `Action entry point not found: ${distPath}. Run 'npm run build' first.`,
-    );
+    throw new Error(`Action entry point not found: ${distPath}. Run 'npm run build' first.`);
   }
 
   // Clear require cache to ensure fresh execution

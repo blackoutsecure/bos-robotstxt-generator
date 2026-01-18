@@ -120,14 +120,10 @@ function printSitemapSection(core, config, _results) {
 
   // Configuration
   core.info('   📋 Configuration:');
+  core.info(`      XML Sitemap:         ${config.generateXmlSitemap ? 'Enabled' : 'Disabled'}`);
+  core.info(`      TXT Sitemap:         ${config.generateTxtSitemap ? 'Enabled' : 'Disabled'}`);
   core.info(
-    `      XML Sitemap:         ${config.generateXmlSitemap ? 'Enabled' : 'Disabled'}`,
-  );
-  core.info(
-    `      TXT Sitemap:         ${config.generateTxtSitemap ? 'Enabled' : 'Disabled'}`,
-  );
-  core.info(
-    `      Gzip Compression:    ${config.generateGzip ? 'Enabled (XML only)' : 'Disabled'}`,
+    `      Gzip Compression:    ${config.generateGzip ? 'Enabled (XML only)' : 'Disabled'}`
   );
   core.info(`      Last Modified:       ${config.lastmodStrategy}`);
   core.info(`      Change Frequency:    ${config.changefreq || '(not set)'}`);
@@ -181,7 +177,7 @@ function printRobotsSection(core, config, _results) {
   core.info('   📋 Configuration:');
   core.info(`      User-agent:          ${config.robotsUserAgent}`);
   core.info(
-    `      Disallow Paths:      ${config.robotsDisallow.length ? config.robotsDisallow.join(', ') : 'Allow all'}`,
+    `      Disallow Paths:      ${config.robotsDisallow.length ? config.robotsDisallow.join(', ') : 'Allow all'}`
   );
   if (config.robotsAllow.length > 0) {
     core.info(`      Allow Paths:         ${config.robotsAllow.join(', ')}`);
@@ -243,10 +239,7 @@ function printHumansSection(core, config, _results) {
 
   // Execution
   core.info('');
-  printSectionStart(
-    core,
-    'Generating humans.txt with team and site information...',
-  );
+  printSectionStart(core, 'Generating humans.txt with team and site information...');
 
   // Results will be printed by the generation logic
 }
@@ -302,17 +295,13 @@ function printSecuritySection(core, config, _results) {
 function printSecurityValidation(core, results) {
   core.info('   🔍 Validation:');
   core.info(`      ✓ Size OK (${results.size})`);
-  core.info(
-    `      ✓ Contains Contact field (${results.contactCount} contact(s))`,
-  );
+  core.info(`      ✓ Contains Contact field (${results.contactCount} contact(s))`);
   core.info(`      ✓ Valid Expires field (${results.expires})`);
   if (results.optionalFields.length > 0) {
     core.info(`      ✓ Optional fields: ${results.optionalFields.join(', ')}`);
   }
   if (!results.signed) {
-    core.info(
-      `      ℹ️  File is not digitally signed (signing is recommended)`,
-    );
+    core.info(`      ℹ️  File is not digitally signed (signing is recommended)`);
   }
   core.info(`      ✓ Valid security.txt format (RFC 9116)`);
 }

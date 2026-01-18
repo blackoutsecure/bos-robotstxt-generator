@@ -1,12 +1,12 @@
-# Robots TXT Generator GitHub Action
+# Blackout Secure Robots TXT Generator
 
-**Copyright © 2025 Blackout Secure | Apache License 2.0**
+**Copyright © 2025-2026 Blackout Secure | Apache License 2.0**
 
 [![Marketplace](https://img.shields.io/badge/GitHub%20Marketplace-blue?logo=github)](https://github.com/marketplace/actions/robots-txt-generator)
 [![GitHub release](https://img.shields.io/github/v/release/blackoutsecure/bos-robotstxt-generator?sort=semver)](https://github.com/blackoutsecure/bos-robotstxt-generator/releases)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue)](LICENSE)
 
-**Robots TXT Generator** - Automated `robots.txt` generation for static sites, SSG frameworks (Next.js, Gatsby, Hugo, Jekyll), and dynamic applications. Control crawler access with ease through a simple GitHub Action.
+**Blackout Secure Robots TXT Generator** - Automated `robots.txt` generation for static sites, SSG frameworks (Next.js, Gatsby, Hugo, Jekyll), and dynamic applications. Control crawler access with ease through a simple GitHub Action.
 
 ## Quick Start
 
@@ -32,7 +32,6 @@ jobs:
           site_url: https://example.com
           public_dir: dist
           robots_disallow: /admin/,/private/
-          
 ```
 
 ## Features
@@ -47,23 +46,23 @@ jobs:
 
 ## Inputs
 
-| Input | Type | Default | Description |
-|-------|------|---------|-------------|
-| `site_url` | string | required | Base site URL (e.g., https://example.com) |
-| `public_dir` | string | `dist` | Directory to write robots.txt |
-| `robots_output_dir` | string | same as `public_dir` | Override output directory |
-| `robots_filename` | string | `robots.txt` | Output filename |
-| `robots_user_agent` | string | `*` | User-agent directive (all robots) |
-| `robots_disallow` | string | empty | Comma-separated disallow paths (e.g., `/admin/,/private/`) |
-| `robots_allow` | string | empty | Comma-separated allow paths (exceptions) |
-| `robots_crawl_delay` | string | empty | Crawl-delay in seconds |
-| `robots_comments` | boolean | `true` | Include generator comments |
-| `strict_validation` | boolean | `true` | Fail on validation errors |
-| `sitemap_urls` | string | empty | Comma-separated sitemap URLs to reference |
-| `debug_show_robots` | boolean | `false` | Display generated robots.txt |
-| `upload_artifacts` | boolean | `true` | Upload to GitHub artifacts |
-| `artifact_name` | string | `robots-file` | Artifact name |
-| `artifact_retention_days` | string | empty | Artifact retention (1-90 days) |
+| Input                     | Type    | Default              | Description                                                |
+| ------------------------- | ------- | -------------------- | ---------------------------------------------------------- |
+| `site_url`                | string  | required             | Base site URL (e.g., https://example.com)                  |
+| `public_dir`              | string  | `dist`               | Directory to write robots.txt                              |
+| `robots_output_dir`       | string  | same as `public_dir` | Override output directory                                  |
+| `robots_filename`         | string  | `robots.txt`         | Output filename                                            |
+| `robots_user_agent`       | string  | `*`                  | User-agent directive (all robots)                          |
+| `robots_disallow`         | string  | empty                | Comma-separated disallow paths (e.g., `/admin/,/private/`) |
+| `robots_allow`            | string  | empty                | Comma-separated allow paths (exceptions)                   |
+| `robots_crawl_delay`      | string  | empty                | Crawl-delay in seconds                                     |
+| `robots_comments`         | boolean | `true`               | Include generator comments                                 |
+| `strict_validation`       | boolean | `true`               | Fail on validation errors                                  |
+| `sitemap_urls`            | string  | empty                | Comma-separated sitemap URLs to reference                  |
+| `debug_show_robots`       | boolean | `false`              | Display generated robots.txt                               |
+| `upload_artifacts`        | boolean | `true`               | Upload to GitHub artifacts                                 |
+| `artifact_name`           | string  | `robots-file`        | Artifact name                                              |
+| `artifact_retention_days` | string  | empty                | Artifact retention (1-90 days)                             |
 
 ## Outputs
 
@@ -93,6 +92,7 @@ Disallow admin and private directories:
 ```
 
 Generated output:
+
 ```
 User-agent: *
 Disallow: /admin/
@@ -112,6 +112,7 @@ Allow exceptions within disallowed paths:
 ```
 
 Generated output:
+
 ```
 User-agent: *
 Allow: /admin/public/
@@ -130,6 +131,7 @@ Use wildcards for pattern matching:
 ```
 
 Generated output:
+
 ```
 User-agent: *
 Disallow: /private/*.pdf
@@ -137,6 +139,7 @@ Disallow: /temp*
 ```
 
 Supported patterns:
+
 - `*` - Wildcard (matches any characters)
 - `$` - End of URL anchor
 
@@ -152,6 +155,7 @@ Set crawl delay for bot request frequency:
 ```
 
 Generated output:
+
 ```
 User-agent: *
 Disallow:
@@ -173,6 +177,7 @@ Block a specific bot while allowing others:
 ```
 
 Generated output:
+
 ```
 User-agent: BadBot
 Disallow: /
@@ -190,6 +195,7 @@ Include sitemap URLs for crawler optimization:
 ```
 
 Generated output:
+
 ```
 User-agent: *
 Disallow:
@@ -330,50 +336,77 @@ npm run build  # Compile src/index.js to dist/index.js
 
 ## Releasing a New Version
 
-### Quick Release
+### Automated Release (Recommended)
+
+The project includes automated release workflows that handle versioning, building, testing, and git tagging:
+
+**Patch Release (bug fixes):**
 
 ```bash
-npm run release -- v1.0.0
+npm run release patch
 ```
 
-This single command will:
-1. Update `package.json` version to 1.0.0
-2. Rebuild `dist/index.js`
-3. Commit changes with message `chore: release v1.0.0`
-4. Create annotated git tag `v1.0.0`
-5. Create/update moving major version tag (e.g., `v1`)
-6. Push to `main` branch and all tags to GitHub
+**Minor Release (new features):**
 
-### Manual Steps (Alternative)
+```bash
+npm run release minor
+```
 
-If you prefer to release manually:
+**Major Release (breaking changes):**
 
-1. **Update version in package.json:**
-   ```bash
-   npm version minor  # or major, patch
-   ```
+```bash
+npm run release major
+```
 
-2. **Rebuild dist:**
-   ```bash
-   npm run build
-   git add dist/
-   git commit --amend --no-edit
-   ```
+**Specific Version:**
 
-3. **Create and push tag:**
-   ```bash
-   git push origin main
-   MAJOR=$(grep '"version"' package.json | head -1 | grep -oP '\d+' | head -1)
-   git tag -f v$MAJOR
-   git push -f origin v$MAJOR
-   ```
+```bash
+npm run release 1.2.3
+```
 
-4. **Publish to GitHub Marketplace:**
-   - Go to: https://github.com/blackoutsecure/bos-robotstxt-generator/releases
-   - Draft new release → select your tag
-   - Check: "Publish this Action to the GitHub Marketplace"
-   - Select category: Deployment or Continuous Integration
-   - Publish
+Each release command automatically:
+
+1. ✅ Increments version (or sets specific version)
+2. ✅ Updates `package.json` and `src/lib/project-config.js`
+3. ✅ Runs quality checks (lint + format)
+4. ✅ Builds `dist/index.js`
+5. ✅ Runs full test suite
+6. ✅ Commits changes with message `chore: release vX.Y.Z`
+7. ✅ Creates annotated git tag `vX.Y.Z`
+8. ✅ Creates/updates moving major version tag (e.g., `v1`)
+9. ✅ Pushes to `main` branch and all tags to GitHub
+
+### Version Management
+
+**Check current version:**
+
+```bash
+npm run ver
+```
+
+**Set specific version (without releasing):**
+
+```bash
+npm run ver:set 1.2.3
+```
+
+**Increment version (without releasing):**
+
+```bash
+npm run ver:patch  # 1.0.2 → 1.0.3
+npm run ver:minor  # 1.0.2 → 1.1.0
+npm run ver:major  # 1.0.2 → 2.0.0
+```
+
+### Final Step: Publish to Marketplace
+
+After pushing tags, complete the release on GitHub:
+
+1. Go to: https://github.com/blackoutsecure/bos-robotstxt-generator/releases
+2. Draft new release → select your tag (e.g., `v1.2.3`)
+3. Check: "Publish this Action to the GitHub Marketplace"
+4. Select category: Deployment or Continuous Integration
+5. Publish release
 
 ## Why `dist/` is Committed
 
@@ -388,7 +421,7 @@ Always rebuild and commit `dist/` when publishing a new version.
 
 ## Contributing
 
-Thank you for considering a contribution! 
+Thank you for considering a contribution!
 
 ### Workflow
 
@@ -430,13 +463,14 @@ Thank you for considering a contribution!
 
 Releases use semantic versioning (MAJOR.MINOR.PATCH). Each release includes:
 
-| File | Update |
-|------|--------|
-| `package.json` | Version number |
-| `dist/index.js` | Compiled action bundle |
-| Git tags | `vX.Y.Z` and moving tag `vX` |
+| File            | Update                       |
+| --------------- | ---------------------------- |
+| `package.json`  | Version number               |
+| `dist/index.js` | Compiled action bundle       |
+| Git tags        | `vX.Y.Z` and moving tag `vX` |
 
 Users can then use:
+
 - `uses: blackoutsecure/bos-robotstxt-generator@v1.0.0` (specific version)
 - `uses: blackoutsecure/bos-robotstxt-generator@v1` (latest v1.x.x)
 
@@ -444,12 +478,14 @@ Users can then use:
 
 **Q: How do I exclude a path from crawling?**
 A: Use the `robots_disallow` input:
+
 ```yaml
 robots_disallow: /admin/,/private/,/temp/
 ```
 
 **Q: Can I allow specific paths within disallowed areas?**
 A: Yes, use `robots_allow` for exceptions:
+
 ```yaml
 robots_disallow: /admin/
 robots_allow: /admin/public/
@@ -472,6 +508,7 @@ A: It depends on your deployment strategy. GitHub Actions artifacts are temporar
 ### Action fails with "site_url is required"
 
 The `site_url` input is mandatory. Provide it in your workflow:
+
 ```yaml
 - uses: blackoutsecure/bos-robotstxt-generator@v1
   with:
@@ -488,6 +525,7 @@ The `site_url` input is mandatory. Provide it in your workflow:
 ### Validation fails
 
 Enable debug output to see issues:
+
 ```yaml
 - uses: blackoutsecure/bos-robotstxt-generator@v1
   with:

@@ -96,9 +96,7 @@ function buildSecurityTxt(options = {}) {
     if (includeComments) {
       lines.push('# Link to encryption key for secure communication');
     }
-    const encryptionUrls = Array.isArray(encryption)
-      ? encryption
-      : [encryption];
+    const encryptionUrls = Array.isArray(encryption) ? encryption : [encryption];
     for (const url of encryptionUrls) {
       lines.push(`Encryption: ${url}`);
     }
@@ -110,9 +108,7 @@ function buildSecurityTxt(options = {}) {
     if (includeComments) {
       lines.push('# Security researchers hall of fame');
     }
-    const ackUrls = Array.isArray(acknowledgments)
-      ? acknowledgments
-      : [acknowledgments];
+    const ackUrls = Array.isArray(acknowledgments) ? acknowledgments : [acknowledgments];
     for (const url of ackUrls) {
       lines.push(`Acknowledgments: ${url}`);
     }
