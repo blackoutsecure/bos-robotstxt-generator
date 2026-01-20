@@ -1,6 +1,6 @@
 {
   "name": "bos-robotstxt-generator",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "private": true,
   "description": "Generate a standards-compliant robots.txt with automated crawler rules, sitemaps, and SEO.",
   "author": "Blackout Secure <https://github.com/blackoutsecure>",
