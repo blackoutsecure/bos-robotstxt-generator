@@ -63,6 +63,14 @@ inputs:
   sitemap_urls:
     description: 'Comma-separated sitemap URLs to reference in robots.txt.'
     required: false
+  include_sitemap:
+    description: 'Include default sitemap URL in robots.txt (based on site_url + sitemap_filename).'
+    required: false
+    default: 'true'
+  sitemap_filename:
+    description: 'Default sitemap filename when include_sitemap is true.'
+    required: false
+    default: 'sitemap.xml'
   debug_show_robots:
     description: 'Debug: display generated robots.txt content.'
     required: false

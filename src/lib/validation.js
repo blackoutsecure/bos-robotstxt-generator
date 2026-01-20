@@ -17,11 +17,13 @@
  * @param {boolean} options.strict - If true, promote warnings to errors
  * @param {number} options.maxSizeKB - Maximum recommended size in KB
  * @param {boolean} options.requireSitemap - Whether a Sitemap directive is required
+ * @param {string} options.publicDir - Public directory to check for sitemap files
+ * @param {string} options.siteUrl - Site URL to determine local vs external sitemaps
  * @returns {Array<{type:'info'|'warning'|'error',message:string}>}
  */
 function validateRobotsTxt(
   robotsContent,
-  { strict = true, maxSizeKB = 500, requireSitemap = false }
+  { strict = true, maxSizeKB = 500, requireSitemap = false, publicDir = null, siteUrl = null }
 ) {
   const results = [];
   try {
@@ -93,6 +95,35 @@ function validateRobotsTxt(
           type: 'warning',
           message: `⚠️  ${invalidSitemaps} sitemap URL(s) invalid (must start with http/https)`,
         });
+      }
+
+      // Check if sitemap files exist locally
+      if (publicDir && siteUrl) {
+        const fs = require('fs');
+        const path = require('path');
+        const missingSitemaps = [];
+
+        for (const url of sitemapUrls) {
+          // Only check local sitemaps (those belonging to the site_url domain)
+          if (url.startsWith(siteUrl)) {
+            // Extract the path from the URL
+            const urlPath = url.substring(siteUrl.length);
+            const filePath = path.join(publicDir, urlPath);
+
+            if (!fs.existsSync(filePath)) {
+              missingSitemaps.push({ url, path: filePath });
+            }
+          }
+        }
+
+        if (missingSitemaps.length > 0) {
+          missingSitemaps.forEach(({ url, path: filePath }) => {
+            results.push({
+              type: 'warning',
+              message: `⚠️  Sitemap file not found: ${path.basename(filePath)} (referenced as ${url})`,
+            });
+          });
+        }
       }
     }
 

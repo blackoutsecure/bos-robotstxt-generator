@@ -75,6 +75,8 @@ async function run() {
     const robotsCrawlDelay = (core.getInput('robots_crawl_delay') || '').trim();
     const robotsComments = toBool(core.getInput('robots_comments') || 'true', true);
     const sitemapUrls = splitList(core.getInput('sitemap_urls'));
+    const includeSitemap = toBool(core.getInput('include_sitemap') || 'true', true);
+    const sitemapFilename = core.getInput('sitemap_filename') || 'sitemap.xml';
     const debugShowRobots = toBool(core.getInput('debug_show_robots'), false);
     const uploadArtifacts = toBool(core.getInput('upload_artifacts'), false);
     const artifactName = core.getInput('artifact_name') || 'robots-file';
@@ -140,8 +142,12 @@ async function run() {
       core.info(`   Crawl Delay:         ${robotsCrawlDelay}s`);
     }
 
+    if (includeSitemap) {
+      core.info(`   Default Sitemap:     ${sitemapFilename}`);
+    }
+
     if (sitemapUrls.length > 0) {
-      core.info(`   Sitemap URLs:        ${sitemapUrls.length} URL(s)`);
+      core.info(`   Additional Sitemaps: ${sitemapUrls.length} URL(s)`);
       sitemapUrls.forEach((url) => core.info(`      - ${url}`));
     }
 
@@ -181,12 +187,23 @@ async function run() {
     }
 
     // Add Sitemap directives
-    const normalizedSitemaps = sitemapUrls.map((url) => {
+    const normalizedSitemaps = [];
+
+    // Add default sitemap if include_sitemap is true
+    if (includeSitemap) {
+      const defaultSitemapPath = ensureLeadingSlash(sitemapFilename);
+      const defaultSitemapUrl = normalizeUrl(siteUrl, defaultSitemapPath);
+      normalizedSitemaps.push(defaultSitemapUrl);
+    }
+
+    // Add additional sitemap URLs
+    sitemapUrls.forEach((url) => {
       // If the URL doesn't start with http, treat it as a path and prepend site_url
       if (!/^https?:\/\//i.test(url)) {
-        return normalizeUrl(siteUrl, ensureLeadingSlash(url));
+        normalizedSitemaps.push(normalizeUrl(siteUrl, ensureLeadingSlash(url)));
+      } else {
+        normalizedSitemaps.push(url);
       }
-      return url;
     });
 
     if (normalizedSitemaps.length > 0) {
@@ -203,6 +220,8 @@ async function run() {
       strict: strictValidation,
       maxSizeKB: ROBOTS_MAX_SIZE_KB,
       requireSitemap: false,
+      publicDir: publicDir,
+      siteUrl: siteUrl,
     });
 
     core.info('\n🔍 Validation:');
