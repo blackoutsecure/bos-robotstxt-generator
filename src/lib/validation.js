@@ -23,7 +23,7 @@
  */
 function validateRobotsTxt(
   robotsContent,
-  { strict = true, maxSizeKB = 500, requireSitemap = false, publicDir = null, siteUrl = null }
+  { strict = true, maxSizeKB = 500, requireSitemap = false, publicDir = null, siteUrl = null },
 ) {
   const results = [];
   try {

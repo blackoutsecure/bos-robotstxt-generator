@@ -128,7 +128,7 @@ function printSitemapSection(core, config, _results) {
   core.info(`      XML Sitemap:         ${config.generateXmlSitemap ? 'Enabled' : 'Disabled'}`);
   core.info(`      TXT Sitemap:         ${config.generateTxtSitemap ? 'Enabled' : 'Disabled'}`);
   core.info(
-    `      Gzip Compression:    ${config.generateGzip ? 'Enabled (XML only)' : 'Disabled'}`
+    `      Gzip Compression:    ${config.generateGzip ? 'Enabled (XML only)' : 'Disabled'}`,
   );
   core.info(`      Last Modified:       ${config.lastmodStrategy}`);
   core.info(`      Change Frequency:    ${config.changefreq || '(not set)'}`);
@@ -182,7 +182,7 @@ function printRobotsSection(core, config, _results) {
   core.info('   📋 Configuration:');
   core.info(`      User-agent:          ${config.robotsUserAgent}`);
   core.info(
-    `      Disallow Paths:      ${config.robotsDisallow.length ? config.robotsDisallow.join(', ') : 'Allow all'}`
+    `      Disallow Paths:      ${config.robotsDisallow.length ? config.robotsDisallow.join(', ') : 'Allow all'}`,
   );
   if (config.robotsAllow.length > 0) {
     core.info(`      Allow Paths:         ${config.robotsAllow.join(', ')}`);

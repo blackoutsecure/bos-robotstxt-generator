@@ -133,7 +133,7 @@ async function buildUrls(options, core) {
               : normalizePathToUrl(
                   baseUrl,
                   publicDir,
-                  path.join(publicDir, href.replace(/^\//, ''))
+                  path.join(publicDir, href.replace(/^\//, '')),
                 );
             fullUrl = candidate;
             item.url = candidate;
@@ -202,7 +202,7 @@ async function buildUrls(options, core) {
     core.info(`🔎 Discovered ${linksDiscoveredCount} additional link(s)`);
     if (discoveredSet.size >= MAX_DISCOVERED_LINKS) {
       core.warning(
-        `⚠️  Discovered links limit reached (${MAX_DISCOVERED_LINKS}). Some links may not be included.`
+        `⚠️  Discovered links limit reached (${MAX_DISCOVERED_LINKS}). Some links may not be included.`,
       );
     }
   }
@@ -283,7 +283,7 @@ async function buildUrls(options, core) {
     }
     if (excludedCount > 0) {
       const excludedUrls = uniqueItems.filter(
-        (item) => !filteredItems.some((fi) => fi.url === item.url)
+        (item) => !filteredItems.some((fi) => fi.url === item.url),
       );
       core.info(`[DEBUG] Excluded by URL patterns (${excludedCount}):`);
       for (const item of excludedUrls) {

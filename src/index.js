@@ -266,7 +266,7 @@ async function run() {
         core.info(`✅ Artifact uploaded: ${artifactName}`);
       } catch (err) {
         core.warning(
-          `⚠️  Failed to upload artifacts: ${err instanceof Error ? err.message : String(err)}`
+          `⚠️  Failed to upload artifacts: ${err instanceof Error ? err.message : String(err)}`,
         );
       }
     }

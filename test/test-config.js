@@ -133,7 +133,7 @@ function validateConfig() {
   }
   if (TEST_CONFIG.ACTION_TIMEOUT_MS > maxActionTimeout) {
     throw new Error(
-      `TEST_CONFIG.ACTION_TIMEOUT_MS (${TEST_CONFIG.ACTION_TIMEOUT_MS}) exceeds safe cap (${maxActionTimeout}). Reduce to avoid runner overuse.`
+      `TEST_CONFIG.ACTION_TIMEOUT_MS (${TEST_CONFIG.ACTION_TIMEOUT_MS}) exceeds safe cap (${maxActionTimeout}). Reduce to avoid runner overuse.`,
     );
   }
 
@@ -142,12 +142,12 @@ function validateConfig() {
   }
   if (TEST_CONFIG.ASYNC_WAIT_MS > maxAsyncWait) {
     throw new Error(
-      `TEST_CONFIG.ASYNC_WAIT_MS (${TEST_CONFIG.ASYNC_WAIT_MS}) exceeds safe cap (${maxAsyncWait}). Reduce to avoid runner overuse.`
+      `TEST_CONFIG.ASYNC_WAIT_MS (${TEST_CONFIG.ASYNC_WAIT_MS}) exceeds safe cap (${maxAsyncWait}). Reduce to avoid runner overuse.`,
     );
   }
   if (TEST_CONFIG.ASYNC_WAIT_MS > TEST_CONFIG.ACTION_TIMEOUT_MS) {
     throw new Error(
-      'TEST_CONFIG.ASYNC_WAIT_MS must not exceed ACTION_TIMEOUT_MS; reduce wait or increase action timeout within safe limits.'
+      'TEST_CONFIG.ASYNC_WAIT_MS must not exceed ACTION_TIMEOUT_MS; reduce wait or increase action timeout within safe limits.',
     );
   }
 }
