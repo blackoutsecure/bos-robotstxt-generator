@@ -36,8 +36,14 @@ jobs:
 
 ## Features
 
-- **Protocol Compliant**: Generates `robots.txt` following the [robots.txt specification](https://www.robotstxt.org/robotstxt.html)
+- **Protocol Compliant**: Generates `robots.txt` following [RFC 9309](https://www.rfc-editor.org/rfc/rfc9309) and the [robots.txt specification](https://www.robotstxt.org/robotstxt.html)
+- **Multiple User-agent Groups**: Ship distinct rules for `*`, `Googlebot`, and any other crawler
 - **Flexible Configuration**: Control allow/disallow rules through simple input parameters
+- **Layered Configuration**: Bundled marketplace baseline → org global config → repo config → action inputs
+- **Crawl-policy Audit**: 15 evidence-based controls with per-rule `fail`/`warn`/`skip` severities
+- **Enterprise Reporting**: Markdown step summary, SARIF 2.1.0 for code scanning, JSON report, recommendations sidecar
+- **AI Findings Summary**: Optional GitHub Models summary with a deterministic local fallback
+- **Local CLI**: `bos-robotstxt validate|generate|audit|sarif` reproduces CI output on your machine
 - **Sitemap Integration**: Automatically injects `Sitemap:` entries for crawler optimization
 - **Validation**: Built-in validation ensures syntax compliance and best practices
 - **Artifact Support**: Uploads generated `robots.txt` to GitHub artifacts automatically
@@ -46,27 +52,217 @@ jobs:
 
 ## Inputs
 
-| Input                     | Type    | Default              | Description                                                |
-| ------------------------- | ------- | -------------------- | ---------------------------------------------------------- |
-| `site_url`                | string  | required             | Base site URL (e.g., https://example.com)                  |
-| `public_dir`              | string  | `dist`               | Directory to write robots.txt                              |
-| `robots_output_dir`       | string  | same as `public_dir` | Override output directory                                  |
-| `robots_filename`         | string  | `robots.txt`         | Output filename                                            |
-| `robots_user_agent`       | string  | `*`                  | User-agent directive (all robots)                          |
-| `robots_disallow`         | string  | empty                | Comma-separated disallow paths (e.g., `/admin/,/private/`) |
-| `robots_allow`            | string  | empty                | Comma-separated allow paths (exceptions)                   |
-| `robots_crawl_delay`      | string  | empty                | Crawl-delay in seconds                                     |
-| `robots_comments`         | boolean | `true`               | Include generator comments                                 |
-| `strict_validation`       | boolean | `true`               | Fail on validation errors                                  |
-| `sitemap_urls`            | string  | empty                | Comma-separated sitemap URLs to reference                  |
-| `debug_show_robots`       | boolean | `false`              | Display generated robots.txt                               |
-| `upload_artifacts`        | boolean | `true`               | Upload to GitHub artifacts                                 |
-| `artifact_name`           | string  | `robots-file`        | Artifact name                                              |
-| `artifact_retention_days` | string  | empty                | Artifact retention (1-90 days)                             |
+| Input                     | Type    | Default              | Description                                                            |
+| ------------------------- | ------- | -------------------- | ---------------------------------------------------------------------- |
+| `site_url`                | string  | required             | Base site URL (e.g., https://example.com)                              |
+| `public_dir`              | string  | `dist`               | Directory to write robots.txt                                          |
+| `robots_output_dir`       | string  | same as `public_dir` | Override output directory                                              |
+| `robots_filename`         | string  | `robots.txt`         | Output filename                                                        |
+| `robots_user_agent`       | string  | `*`                  | User-agent directive for the input-defined group                       |
+| `robots_disallow`         | string  | empty                | Comma- or newline-separated disallow paths (e.g., `/admin/,/private/`) |
+| `robots_allow`            | string  | empty                | Comma- or newline-separated allow paths (exceptions)                   |
+| `robots_crawl_delay`      | string  | empty                | Crawl-delay in seconds                                                 |
+| `robots_comments`         | boolean | from config          | Include generator comments                                             |
+| `strict_validation`       | boolean | `true`               | Fail on validation errors                                              |
+| `sitemap_urls`            | string  | empty                | Comma- or newline-separated sitemap URLs or site-relative paths        |
+| `debug_show_robots`       | boolean | `false`              | Display generated robots.txt                                           |
+| `upload_artifacts`        | boolean | `true`               | Upload to GitHub artifacts                                             |
+| `artifact_name`           | string  | `robots-file`        | Artifact name                                                          |
+| `artifact_retention_days` | string  | empty                | Artifact retention (1-90 days)                                         |
+
+### Configuration, Audit & Reporting Inputs
+
+| Input                    | Description                                              | Default                                                         |
+| ------------------------ | -------------------------------------------------------- | --------------------------------------------------------------- |
+| `config_path`            | Explicit repository config file                          | auto-discover                                                   |
+| `global_config_path`     | Organization-level global config                         | `.github/blackout-secure-robotstxt-generator-global-config.yml` |
+| `use_global_config`      | Global tier: `auto`, `true` (require), `false` (disable) | `auto`                                                          |
+| `use_marketplace_config` | Apply the bundled marketplace baseline                   | `true`                                                          |
+| `enable_audit`           | Run the RFC 9309 crawl-policy audit                      | `true`                                                          |
+| `audit_fail_on`          | `fail` or `never`; empty uses `robots_txt.audit.fail_on` | from config                                                     |
+| `sarif_output`           | Write SARIF 2.1.0 for GitHub code scanning               | disabled                                                        |
+| `report_json`            | Write the machine-readable JSON audit report             | disabled                                                        |
+| `recommendations_json`   | Write structured remediation recommendations             | disabled                                                        |
+| `skips_json`             | Write the skipped-controls sidecar                       | disabled                                                        |
+| `step_summary`           | Append the Markdown report to `$GITHUB_STEP_SUMMARY`     | `true`                                                          |
+| `enable_ai_summary`      | Generate a natural-language findings summary             | `true`                                                          |
+| `ai_provider`            | `auto`, `none`, or a named provider                      | `auto`                                                          |
 
 ## Outputs
 
-- `robots_path`: Path to the generated `robots.txt`
+| Output                      | Description                                                                        |
+| --------------------------- | ---------------------------------------------------------------------------------- |
+| `robots_path`               | Path to the generated `robots.txt`                                                 |
+| `group_count`               | Number of User-agent groups written                                                |
+| `sitemap_count`             | Number of Sitemap directives written                                               |
+| `config_sources`            | Applied config tiers, in precedence order                                          |
+| `audit_verdict`             | `Pass`, `Review recommended`, `Action required`, `Inconclusive`, or `Not assessed` |
+| `audit_pass_count`          | Controls that passed                                                               |
+| `audit_warn_count`          | Controls that warned                                                               |
+| `audit_fail_count`          | Controls that failed                                                               |
+| `audit_error_count`         | Controls that could not be evaluated                                               |
+| `audit_skip_count`          | Controls that were not assessed                                                    |
+| `sarif_path`                | Written SARIF file, when `sarif_output` is set                                     |
+| `report_json_path`          | Written JSON report, when `report_json` is set                                     |
+| `recommendations_json_path` | Written recommendations sidecar, when `recommendations_json` is set                |
+| `ai_summary`                | Short natural-language summary of the audit findings                               |
+
+## 🗂️ Layered Configuration
+
+Configuration is deep-merged, then validated. Precedence, lowest to highest:
+
+1. **Bundled marketplace baseline** — `src/marketplace-config.json`, shipped with the action
+2. **Organization global config** — `.github/blackout-secure-robotstxt-generator-global-config.yml`
+3. **Repository config** — first match of `.github/bos-universal-config.json|yml|yaml`, `bos-universal-config.*`, or `.bos-robotstxt.yml|yaml`
+4. **Action inputs** — any input you explicitly set wins over every config tier
+
+Unknown top-level keys are ignored so the same `bos-universal-config.json` can be shared
+with other Blackout Secure kits. Unknown keys **inside** `robots_txt.audit.rules`, or an
+unknown field on a `groups[]` entry, are rejected so a typo fails fast.
+
+Config is the only way to declare **more than one User-agent group** — the action inputs
+describe a single group, which is prepended unless config already defines that agent.
+
+```yaml
+# .github/bos-universal-config.json (YAML shown for readability)
+robots_txt:
+  owner: blackoutsecure
+
+  generate:
+    include_comments: true
+    filename: robots.txt
+    include_sitemap: true
+    sitemap_filename: sitemap.xml
+
+  groups:
+    - user_agent: '*'
+      disallow:
+        - /admin/
+        - /private/
+    - user_agent: Googlebot
+      allow:
+        - /
+    - user_agent: GPTBot
+      disallow:
+        - /
+
+  sitemaps:
+    - https://example.com/sitemap-news.xml
+
+  audit:
+    enable: true
+    fail_on: fail # or `never` to keep the audit advisory
+    max_size_kb: 500
+    rules:
+      require_sitemap: fail
+      forbid_disallow_all: fail
+      sitemap_file_exists: warn
+
+  reporting:
+    step_summary: true
+    sarif: true
+    json_report: true
+    recommendations: true
+
+  remediation:
+    enable_ai_findings_summary: true
+    ai_findings_summary_provider: auto
+    local_heuristic_fallback: true
+```
+
+## 🤖 robots.txt Compliance Audit
+
+Every control is evidence-based and configurable through `robots_txt.audit.rules.<name>`.
+A rule set to `skip` still emits a finding, so the report records that the control was
+deliberately not assessed.
+
+| Rule    | Config key             | Checks                                                     | Default |
+| ------- | ---------------------- | ---------------------------------------------------------- | ------- |
+| `RB001` | `require_user_agent`   | At least one `User-agent` record exists                    | `warn`  |
+| `RB002` | `require_sitemap`      | At least one `Sitemap:` directive is declared              | `warn`  |
+| `RB003` | `sitemap_absolute_url` | Sitemap values are absolute URLs                           | `warn`  |
+| `RB004` | `sitemap_same_origin`  | Sitemap host matches the declared `site_url`               | `warn`  |
+| `RB005` | `sitemap_https`        | Sitemap URLs use HTTPS                                     | `warn`  |
+| `RB010` | `forbid_disallow_all`  | The `*` group does not contain `Disallow: /`               | `warn`  |
+| `RB011` | `forbid_crawl_delay`   | No `Crawl-delay` (Google ignores it)                       | `skip`  |
+| `RB012` | `valid_directives`     | No unrecognised directives or malformed lines              | `warn`  |
+| `RB013` | `valid_path_prefixes`  | Allow/Disallow values start with `/` or `*`                | `warn`  |
+| `RB014` | `no_duplicate_groups`  | No `User-agent` appears in two groups                      | `warn`  |
+| `RB020` | `site_root_location`   | File is written to the published site root                 | `warn`  |
+| `RB021` | `file_size_limit`      | File stays within `audit.max_size_kb` (Google caps at 500) | `warn`  |
+| `RB022` | `sitemap_file_exists`  | Same-origin `Sitemap:` URLs resolve to a published file    | `skip`  |
+| `RB030` | `require_utf8_no_bom`  | UTF-8 encoded without a byte-order mark                    | `warn`  |
+| `RB031` | `forbid_html_content`  | File is plain text, not an HTML error page                 | `warn`  |
+
+No rule defaults to `fail`, so adopting the audit never breaks an existing pipeline on
+day one. Opt individual rules up to `fail` once your file is clean.
+
+### Reporting example
+
+```yaml
+- name: Generate and audit robots.txt
+  id: robotstxt
+  uses: blackoutsecure/bos-robotstxt-generator@v1
+  with:
+    site_url: 'https://example.com'
+    public_dir: 'dist'
+    sarif_output: 'robotstxt-audit.sarif'
+    report_json: 'robotstxt-audit.json'
+    audit_fail_on: 'never'
+
+- name: Upload audit findings to code scanning
+  uses: github/codeql-action/upload-sarif@v3
+  with:
+    sarif_file: robotstxt-audit.sarif
+
+- run: echo "Verdict: ${{ steps.robotstxt.outputs.audit_verdict }}"
+```
+
+`skip` findings are intentionally omitted from SARIF — they would clutter the Security
+tab with controls that were never assessed. Use `skips_json` when you need that record.
+
+## 🤖 AI Findings Summary
+
+When `enable_ai_summary` is on, the action asks a model for a three-bullet triage summary
+of the non-passing findings and appends it to the step summary and JSON report.
+
+- `ai_provider: auto` (default) uses **GitHub Models** whenever `GITHUB_MODELS_TOKEN` or
+  `GITHUB_TOKEN` is exposed to the job. Grant `models: read` in the job permissions.
+- `ai_provider: none` disables the model call.
+- Any other name uses `<NAME>_API_KEY` plus `<NAME>_API_ENDPOINT` from the environment.
+
+AI is never on the critical path: any missing credential, authorization failure, timeout,
+or transport error falls back to a deterministic local summary, and the run continues.
+
+## 🖥️ Local CLI
+
+The CLI shares every module with the Action, so a local dry-run produces the same report
+as CI — including auditing a `robots.txt` this action did not generate.
+
+```bash
+npm install
+
+# Resolve and print the merged configuration cascade
+npx bos-robotstxt validate
+
+# Write robots.txt from the resolved configuration
+npx bos-robotstxt generate --public-dir dist --site-url https://example.com
+
+# Audit any existing robots.txt and write every report artefact
+npx bos-robotstxt audit \
+  --public-dir dist \
+  --site-url https://example.com \
+  --sarif robotstxt-audit.sarif \
+  --json robotstxt-audit.json \
+  --recommendations robotstxt-recommendations.json \
+  --fail-on never
+
+# Merge SARIF logs before a single code-scanning upload
+npx bos-robotstxt sarif --input a.sarif --input b.sarif --output merged.sarif
+```
+
+Exit codes: `0` success, `1` audit failed under the `fail` policy, `2` usage or
+configuration error.
 
 ## Usage Examples
 

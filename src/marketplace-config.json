@@ -1,0 +1,45 @@
+{
+  "robots_txt": {
+    "generate": {
+      "include_comments": true,
+      "filename": "robots.txt",
+      "include_sitemap": true,
+      "sitemap_filename": "sitemap.xml"
+    },
+    "groups": [],
+    "sitemaps": [],
+    "audit": {
+      "enable": true,
+      "fail_on": "fail",
+      "max_size_kb": 500,
+      "rules": {
+        "require_user_agent": "warn",
+        "require_sitemap": "warn",
+        "sitemap_absolute_url": "warn",
+        "sitemap_same_origin": "warn",
+        "sitemap_https": "warn",
+        "forbid_disallow_all": "warn",
+        "forbid_crawl_delay": "skip",
+        "valid_directives": "warn",
+        "valid_path_prefixes": "warn",
+        "no_duplicate_groups": "warn",
+        "site_root_location": "warn",
+        "file_size_limit": "warn",
+        "sitemap_file_exists": "skip",
+        "require_utf8_no_bom": "warn",
+        "forbid_html_content": "warn"
+      }
+    },
+    "reporting": {
+      "step_summary": true,
+      "sarif": true,
+      "json_report": true,
+      "recommendations": true
+    },
+    "remediation": {
+      "enable_ai_findings_summary": true,
+      "ai_findings_summary_provider": "auto",
+      "local_heuristic_fallback": true
+    }
+  }
+}

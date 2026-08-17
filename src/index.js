@@ -28,10 +28,16 @@ try {
   // Artifact client not available in local dev
 }
 
-const { normalizeUrl, formatFileSize, findPublicDir, inferSiteUrl } = require('./lib/utils');
-const { getRobotsTxtHeader } = require('./lib/project-config');
+const { formatFileSize, findPublicDir, inferSiteUrl } = require('./lib/utils');
 const { validateRobotsTxt } = require('./lib/validation');
 const { printHeader, printFooter } = require('./lib/output-formatter');
+const { buildRobotsTxt, resolveSitemaps } = require('./lib/robots-builder');
+const cfgMod = require('./lib/config');
+const auditMod = require('./lib/audit');
+const sarifMod = require('./lib/sarif');
+const reportMod = require('./lib/report');
+const aiMod = require('./lib/ai');
+const { packageMetadata } = require('./lib/metadata');
 
 function getRobotsMaxSizeKb() {
   return parseInt(process.env.TEST_ROBOTS_MAX_SIZE_KB || '500', 10);
@@ -45,20 +51,73 @@ function toBool(value, fallback) {
   return fallback;
 }
 
+/**
+ * Read a boolean action input, falling back to the layered config value.
+ * @param {string} name - Action input name.
+ * @param {boolean} fallback - Config-derived default.
+ * @returns {boolean} Resolved boolean.
+ */
+function boolInput(name, fallback) {
+  return toBool((core.getInput(name) || '').trim(), fallback);
+}
+
+/**
+ * Split a list input on commas or newlines.
+ *
+ * `action.yml` documents these inputs as comma-separated, so splitting on
+ * newlines alone silently collapsed `"/a/,/b/"` into one bogus rule.
+ *
+ * @param {string} raw - Raw input value.
+ * @returns {string[]} Trimmed, non-empty entries.
+ */
 function splitList(raw) {
   return (raw || '')
-    .split('\n')
+    .split(/[\n,]/)
     .map((s) => s.trim())
     .filter((s) => s.length > 0);
 }
 
-function ensureLeadingSlash(input) {
-  return input.startsWith('/') ? input : `/${input}`;
+/**
+ * Resolve the tri-state `use_global_config` input.
+ * @returns {boolean|null} true = require, false = disable, null = auto.
+ */
+function globalConfigMode() {
+  const raw = (core.getInput('use_global_config') || 'auto').trim().toLowerCase();
+  if (raw === 'true') return true;
+  if (raw === 'false') return false;
+  return null;
 }
 
 async function run() {
   try {
     printHeader(core);
+
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Layered configuration
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // Precedence: action input (when set) > repository config > global
+    // config > bundled marketplace baseline > built-in default.
+    let cfg;
+    try {
+      cfg = cfgMod.resolve(process.cwd(), {
+        configPath: core.getInput('config_path') || '',
+        globalConfigPath: core.getInput('global_config_path') || cfgMod.DEFAULT_GLOBAL_CONFIG_PATH,
+        useGlobalConfig: globalConfigMode(),
+        useMarketplaceConfig: boolInput('use_marketplace_config', true),
+        repoName: (process.env.GITHUB_REPOSITORY || '').split('/')[1] || '',
+      });
+    } catch (configError) {
+      core.setFailed(`❌ Configuration error: ${configError.message}`);
+      return;
+    }
+
+    const pkg = packageMetadata();
+    core.info(`⚙️  ${pkg.name} v${pkg.version}`);
+    core.info('   Config cascade:');
+    for (const source of cfg.sourcePaths) {
+      core.info(`      - ${source}`);
+    }
+    core.setOutput('config_sources', cfg.sourcePaths.join(','));
 
     const ROBOTS_MAX_SIZE_KB = getRobotsMaxSizeKb();
     const allowAutodetect = toBool(core.getInput('allow_autodetect') || 'true', true);
@@ -68,17 +127,17 @@ async function run() {
     let siteUrl = (core.getInput('site_url') || '').trim();
     let publicDir = core.getInput('public_dir') || 'dist';
     const robotsOutputDir = core.getInput('robots_output_dir') || publicDir;
-    const robotsFilename = core.getInput('robots_filename') || 'robots.txt';
+    const robotsFilename = core.getInput('robots_filename') || cfg.generate.filename;
     const robotsUserAgent = core.getInput('robots_user_agent') || '*';
     const robotsDisallow = splitList(core.getInput('robots_disallow'));
     const robotsAllow = splitList(core.getInput('robots_allow'));
     const robotsCrawlDelay = (core.getInput('robots_crawl_delay') || '').trim();
-    const robotsComments = toBool(core.getInput('robots_comments') || 'true', true);
+    const robotsComments = boolInput('robots_comments', cfg.generate.includeComments);
     const sitemapUrls = splitList(core.getInput('sitemap_urls'));
-    const includeSitemap = toBool(core.getInput('include_sitemap') || 'true', true);
-    const sitemapFilename = core.getInput('sitemap_filename') || 'sitemap.xml';
+    const includeSitemap = boolInput('include_sitemap', cfg.generate.includeSitemap);
+    const sitemapFilename = core.getInput('sitemap_filename') || cfg.generate.sitemapFilename;
     const debugShowRobots = toBool(core.getInput('debug_show_robots'), false);
-    const uploadArtifacts = toBool(core.getInput('upload_artifacts'), false);
+    const uploadArtifacts = toBool(core.getInput('upload_artifacts') || 'true', true);
     const artifactName = core.getInput('artifact_name') || 'robots-file';
     const artifactRetentionDays =
       parseInt(core.getInput('artifact_retention_days') || '0', 10) || undefined;
@@ -160,58 +219,31 @@ async function run() {
 
     core.info('\n📝 Generating robots.txt...\n');
 
-    // Build robots.txt content
-    let robotsContent = robotsComments ? getRobotsTxtHeader() : '';
+    // The action inputs describe one group; config can declare more, and
+    // an explicitly configured group for the same agent wins.
+    const inputGroup = {
+      userAgent: robotsUserAgent,
+      allow: robotsAllow,
+      disallow: robotsDisallow,
+      crawlDelay: robotsCrawlDelay,
+    };
+    const configuredAgents = new Set(cfg.groups.map((group) => group.userAgent.toLowerCase()));
+    const groups = configuredAgents.has(inputGroup.userAgent.toLowerCase())
+      ? cfg.groups.map((group) => ({ ...group }))
+      : [inputGroup, ...cfg.groups.map((group) => ({ ...group }))];
 
-    robotsContent += `\nUser-agent: ${robotsUserAgent}\n`;
-
-    // Build Allow/Disallow sections
-    if (robotsDisallow.length === 0 && robotsAllow.length === 0) {
-      robotsContent += 'Disallow:\n';
-    } else {
-      if (robotsAllow.length > 0) {
-        robotsAllow.forEach((allow) => {
-          robotsContent += `Allow: ${ensureLeadingSlash(allow)}\n`;
-        });
-      }
-      if (robotsDisallow.length > 0) {
-        robotsDisallow.forEach((disallow) => {
-          robotsContent += `Disallow: ${ensureLeadingSlash(disallow)}\n`;
-        });
-      }
-    }
-
-    // Add Crawl-delay if specified
-    if (robotsCrawlDelay) {
-      robotsContent += `Crawl-delay: ${robotsCrawlDelay}\n`;
-    }
-
-    // Add Sitemap directives
-    const normalizedSitemaps = [];
-
-    // Add default sitemap if include_sitemap is true
-    if (includeSitemap) {
-      const defaultSitemapPath = ensureLeadingSlash(sitemapFilename);
-      const defaultSitemapUrl = normalizeUrl(siteUrl, defaultSitemapPath);
-      normalizedSitemaps.push(defaultSitemapUrl);
-    }
-
-    // Add additional sitemap URLs
-    sitemapUrls.forEach((url) => {
-      // If the URL doesn't start with http, treat it as a path and prepend site_url
-      if (!/^https?:\/\//i.test(url)) {
-        normalizedSitemaps.push(normalizeUrl(siteUrl, ensureLeadingSlash(url)));
-      } else {
-        normalizedSitemaps.push(url);
-      }
+    const normalizedSitemaps = resolveSitemaps({
+      siteUrl,
+      includeSitemap,
+      sitemapFilename,
+      extra: [...sitemapUrls, ...cfg.sitemaps],
     });
 
-    if (normalizedSitemaps.length > 0) {
-      robotsContent += '\n';
-      normalizedSitemaps.forEach((url) => {
-        robotsContent += `Sitemap: ${url}\n`;
-      });
-    }
+    const robotsContent = buildRobotsTxt({
+      groups,
+      sitemaps: normalizedSitemaps,
+      includeComments: robotsComments,
+    });
 
     const robotsPath = path.join(robotsOutputDir, robotsFilename);
 
@@ -273,8 +305,126 @@ async function run() {
 
     printFooter(core);
 
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    // RFC 9309 Audit + Reporting
+    // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+    if (boolInput('enable_audit', cfg.audit.enable)) {
+      const auditResult = auditMod.audit({
+        cfg,
+        content: robotsContent,
+        filePath: robotsPath,
+        siteUrl,
+        publicDir,
+        outputDir: robotsOutputDir,
+      });
+
+      reportMod.printAuditTable(core, auditResult);
+
+      const failOnInput = (core.getInput('audit_fail_on') || '').trim();
+      const failOn = cfgMod.FAIL_ON_LEVELS.includes(failOnInput) ? failOnInput : cfg.audit.failOn;
+      if (failOnInput && !cfgMod.FAIL_ON_LEVELS.includes(failOnInput)) {
+        core.warning(
+          `audit_fail_on: '${failOnInput}' is not one of ${cfgMod.FAIL_ON_LEVELS.join(', ')}; using '${failOn}'.`,
+        );
+      }
+      const failRun = auditMod.shouldFail(auditResult, failOn);
+      reportMod.annotate(core, auditResult, failRun);
+
+      const remediation = {
+        ...cfg.remediation,
+        enableAiFindingsSummary: boolInput(
+          'enable_ai_summary',
+          cfg.remediation.enableAiFindingsSummary,
+        ),
+        aiFindingsSummaryProvider:
+          core.getInput('ai_provider') || cfg.remediation.aiFindingsSummaryProvider,
+      };
+      const summary = await aiMod.buildSummary(auditResult, remediation);
+      if (summary.text) {
+        core.info('');
+        core.info(`🤖 Findings summary (${summary.provider}):`);
+        for (const line of summary.text.split('\n')) {
+          core.info(`   ${line}`);
+        }
+      }
+
+      const sarifPath = core.getInput('sarif_output') || '';
+      if (cfg.reporting.sarif && sarifPath) {
+        try {
+          sarifMod.dump(
+            sarifMod.merge({
+              runs: [sarifMod.auditRun(auditResult.findings, { baseDir: process.cwd() })],
+            }),
+            sarifPath,
+          );
+          core.info(`   ✓ SARIF written: ${sarifPath}`);
+          core.setOutput('sarif_path', sarifPath);
+        } catch (err) {
+          core.warning(`   ⚠️  Failed to write SARIF: ${err.message}`);
+        }
+      }
+
+      const reportPath = core.getInput('report_json') || '';
+      if (cfg.reporting.jsonReport && reportPath) {
+        try {
+          reportMod.writeJsonReport(auditResult, reportPath, {
+            ai_summary: summary.text,
+            ai_provider: summary.provider,
+            config_sources: [...cfg.sourcePaths],
+            package: pkg,
+          });
+          core.info(`   ✓ JSON report written: ${reportPath}`);
+          core.setOutput('report_json_path', reportPath);
+        } catch (err) {
+          core.warning(`   ⚠️  Failed to write JSON report: ${err.message}`);
+        }
+      }
+
+      const recommendationsPath = core.getInput('recommendations_json') || '';
+      if (cfg.reporting.recommendations && recommendationsPath) {
+        try {
+          reportMod.writeRecommendations(auditResult, recommendationsPath);
+          core.info(`   ✓ Recommendations written: ${recommendationsPath}`);
+          core.setOutput('recommendations_json_path', recommendationsPath);
+        } catch (err) {
+          core.warning(`   ⚠️  Failed to write recommendations: ${err.message}`);
+        }
+      }
+
+      const skipsPath = core.getInput('skips_json') || '';
+      if (skipsPath) {
+        try {
+          reportMod.writeSkips(auditResult, skipsPath);
+          core.info(`   ✓ Skips written: ${skipsPath}`);
+        } catch (err) {
+          core.warning(`   ⚠️  Failed to write skips: ${err.message}`);
+        }
+      }
+
+      if (boolInput('step_summary', cfg.reporting.stepSummary)) {
+        reportMod.writeStepSummary(auditResult, {
+          aiSummary: summary.text,
+          aiProvider: summary.provider,
+        });
+      }
+
+      const totals = auditResult.totals();
+      core.setOutput('audit_verdict', auditResult.toJSON().verdict);
+      core.setOutput('audit_pass_count', String(totals.pass));
+      core.setOutput('audit_warn_count', String(totals.warn));
+      core.setOutput('audit_fail_count', String(totals.fail));
+      core.setOutput('audit_error_count', String(totals.error));
+      core.setOutput('audit_skip_count', String(totals.skip));
+      core.setOutput('ai_summary', summary.text);
+    } else {
+      core.info('');
+      core.info('🤖 robots.txt Audit: Disabled');
+    }
+
     // Set output
     core.setOutput('robots_path', robotsPath);
+    core.setOutput('group_count', String(groups.length));
+    core.setOutput('sitemap_count', String(normalizedSitemaps.length));
   } catch (err) {
     core.setFailed(err instanceof Error ? err.message : String(err));
   }
